@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>购物车</title>
+    <style>
+    .active{
+        background-color: #ddd;
+    }
+    </style>
+</head>
+<body>
+    <div id="app">
+      <h2 v-bind:title="title"> {{title}}</h2> 
+          
+        <!-- 监听组件事件 新增课程 -->
+        <!-- <course-add @add-course="addCourse"></course-add> -->
+        <course-add v-model="course"   @add-course="addCourse"></course-add>
+        <!-- <course-add :value="course" @input="course=$event" @add-course="addCourse"></course-add> -->
+       
+        <!-- <div v-for="item in courses" :key="item" :class="{active:selectedCourse===item}" @click="selectedCourse=item">
+            {{ item }}
+        </div> -->
+
+        <!-- 列表组件 -->
+        <course-list :courses="courses"></course-list>
+       
+       <p>
+           <!-- 课程总数  {{ courses.length+'门' }} -->
+
+           <!-- 课程总数 {{total}} -->
+           课程总数 {{totalCount}}
+       </p>
+    </div>
+    <script src="vue.js"></script>
+    <script>
+
+         //新增课程组件
+         Vue.component('course-add',{
+            //  data(){
+            //      return {
+            //          course:''
+            //      }
+            //  },
+             props:['value'],
+             template: `
+             <div>
+                <p>
+                    <input type="text"  :value="value"
+                     @input="onInput"
+                     v-on:keydown.enter="addCourse" />
+                    <input type="button" @click="addCourse" value="添加" />
+                 </p>
+             </div>
+             `,
+             methods: {
+                 addCourse() {
+                      //派发事件通知父组件新增课程
+                     this.$emit('add-course')
+                     //this.course=''
+                 },
+                 onInput(e){
+                    this.$emit('input',e.target.value)
+                 }
+             },
+         })
+         //课程列表组件
+
+         Vue.component('course-list',{
+             data(){
+                 return {
+                     selectedCourse:'',
+                 }
+             },
+             props:{
+                 courses:{
+                     type:Array,
+                     default:[]
+                 }
+             },
+             template:`
+             <div>
+                <p v-if="courses.length==0">没有任何课程信息</p>
+                <div class="course-list" v-else>
+                        <div v-for="item in courses" :key="item"
+                        :style="{backgroundColor:selectedCourse===item?'#ddd':'transparent'}"
+                        @click="selectedCourse=item">
+                            {{ item }}
+                        </div>
+                </div>
+            </div>
+             `
+         })
+         //模拟异步数据调用
+         function getCourses(){
+             return new Promise(resolve=>{
+                 setTimeout(()=>{
+                    resolve(['web全栈','web高级'])
+                 },1000)
+             })
+         }
+        //创建vue实例
+        const app = new Vue({
+            el:'#app',
+            data() {
+                return {
+                    title: '购物车',
+                    course:"",
+                    selectedCourse:"",
+                    courses:[],
+                    totalCount:0
+                }
+            },
+            async created () {
+                //执行时间  组件实例已创建，未挂载，dom不存在
+                const courses = await getCourses()
+                this.courses=courses;
+            },
+            // mounted () {
+            //     ;
+            // },
+            methods: {
+                addCourse() {
+                     this.courses.push(this.course)
+                     this.course=""
+                }
+            },
+            computed: {
+                total() {
+                    //计算属性有缓存性：如果值没有发生变化，则页面不会重新渲染
+                    return this.courses.length+'门' 
+                }
+            },
+            //默认情况下watch初始化时不执行
+            // watch: {
+            //     courses(newValue, oldValue) {
+            //         this.totalCount = newValue.length+'门'
+            //     }
+            // },
+            watch: {
+                courses: {
+                    immediate: true,//立即执行一次
+                    //deep: true,//往下深度执行
+                    handler(newValue, oldValue) {
+                        this.totalCount = newValue.length+'门'
+                    }
+                }
+            },
+        })
+        
+    </script>
+</body>
+</html>

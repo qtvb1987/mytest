@@ -7,7 +7,22 @@
     <title>Document</title>
 </head>
 <body>
-    hello word
-    <script src="./hello.js"></script>
+    <div id="app">
+        {{title}}
+    </div>
+    <script src="vue.js"></script>
+    <script>
+        const app = new Vue({
+            el:'#app',
+            data() {
+                return {
+                    title: 'hello,vue'
+                }
+            },
+        })
+        setTimeout(()=>{
+           app.title='mou,vue'
+        },1000)
+    </script>
 </body>
 </html>
