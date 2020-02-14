@@ -28,6 +28,16 @@
     .message-box-close{
         float:right;
     }
+
+     /* 动画相关样式 */
+     /* 入场之前状态 */
+    .fade-enter,.fade-leave-to{
+         opacity: 0;
+    }
+    /* 过度定义 */
+    .fade-enter-active,.fade-leave-active{
+        transition: opacity 1.5s;
+    }
     </style>
 </head>
 <body>
@@ -61,7 +71,7 @@
       <p> <input type="text" v-model.number="price" /> <button @click="batchUpdate">批量更新价格</button>
       </p>
 
-      <div class="toolbar" v-permission="'admin'">
+      <div class="toolbar">
           <button @click="$bus.$emit('message-close')">清空提示框</button>
       </div>
         <!-- 监听组件事件 新增课程 -->
@@ -85,8 +95,7 @@
     </div>
     <script src="vue.js"></script>
     <script>
-           //模拟用户角色
-          const roles="user";
+
            //总线
           Vue.prototype.$bus = new Vue();
 
@@ -100,13 +109,15 @@
                   }
               },
               template:`
-              <div class="message-box" v-if="show">
+              <transition name="fade">
+              <div class=" message-box" v-if="show">
                 <!--   具名插槽-->
                 <slot name="title" title="来自message的标题">默认标题</slot>
                 <!--   通过slot获取传入的内容-->
                 <slot name="default"></slot>
                 <span class="message-box-close" @click="toggle">X</span>
               </div>
+              </transition>
               `,
               mounted () {
                   this.$bus.$on('message-close',()=>{
@@ -120,26 +131,6 @@
                   }
               },
           })
-           
-          //实现自定义指令
-          Vue.directive('focus',{
-              inserted(el,binding){
-                  el.focus()
-              }
-          })
-
-          Vue.directive('permission',{
-              inserted(el,binding){
-                 console.log(binding)
-                 //若指定用户角色和当前用户角色不一致，则删除当前指令的绑定元素
-                  if(roles!==binding.value)
-                 {
-                     el.parentElement.removeChild(el)
-                 }
-              }
-          })
-
-
          //新增课程组件
          Vue.component('course-add',{
             //  data(){
@@ -157,10 +148,7 @@
                 <p>
                     <input type="text"  :value="value"
                      @change="onChange"
-                     v-on:keydown.enter="addCourse" 
-                     ref="inp" 
-                     v-focus
-                     />
+                     v-on:keydown.enter="addCourse" ref="inp" />
                     <input type="button" @click="addCourse" value="添加" />
                  </p>
              </div>
@@ -176,15 +164,9 @@
                  }
              },
              mounted () {
-               //  this.$refs.inp.focus();
+                 this.$refs.inp.focus();
              },
          })
-
-        // 过滤器
-        // Vue.filter('currency',function(value){
-        //     return value;
-        // })
-
          //课程列表组件
 
          Vue.component('course-list',{
@@ -203,19 +185,16 @@
              <div>
                 <p v-if="courses.length==0">没有任何课程信息</p>
                 <div class="course-list" v-else>
+                    <transition-group name="fade">
                         <div v-for="(item,k) in courses" :key="item.name+k"
                         :style="{backgroundColor:selectedCourse===(item.name+k)?'#ddd':'transparent'}"
                         @click="selectedCourse=(item.name+k)">
-                            {{ item.name+k }} - {{ item.price | currency('￥')}}
+                            {{ item.name+k }} - ¥{{ item.price}}
                         </div>
+                    </transition-group>
                 </div>
             </div>
-             `,
-             filters:{
-                 currency(value,symbol='￥'){
-                     return symbol+value
-                 }
-             }
+             `
          })
          //模拟异步数据调用
          function getCourses(){
