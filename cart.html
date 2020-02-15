@@ -28,7 +28,16 @@
     .message-box-close{
         float:right;
     }
+
+    .icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.15em;
+  fill: currentColor;
+  overflow: hidden;
+}
     </style>
+    <script src="https://at.alicdn.com/t/font_1641137_ho24nw8oeek.js"></script>
 </head>
 <body>
     <div id="app">
@@ -54,12 +63,26 @@
             
         </message>
         <!-- <message :show="show" @close="show=$event">新增课程成功！</message> -->
-      <h2 v-bind:title="title"> {{title}}</h2> 
+        
+        <!-- 使用render方法实现heading组件 -->
+        <heading level="1" :title="title" icon="cart"> 
+            {{title}}
+        </heading>
+
+
+      <h2 v-bind:title="title">
+          <svg class="icon">
+              <use xlink:href="#icon-cart"></use>
+          </svg>
+           {{title}}
+        </h2> 
           
       <!-- 批量更新价格 -->
 
       <p> <input type="text" v-model.number="price" /> <button @click="batchUpdate">批量更新价格</button>
       </p>
+    
+     
 
       <div class="toolbar" v-permission="'admin'">
           <button @click="$bus.$emit('message-close')">清空提示框</button>
@@ -86,10 +109,54 @@
     <script src="vue.js"></script>
     <script>
            //模拟用户角色
-          const roles="user";
+          const roles="admin";
            //总线
           Vue.prototype.$bus = new Vue();
 
+           //heading组件
+           //<heading :level="1" :title="title" icon="cart">{{title}} </heading>
+           //<h2 title=""><svg><use xlink:href="#icon-cart"></use></svg></h2>
+           Vue.component('heading',{
+               props:{
+                   //level:String
+                   level:{
+                       type:String,
+                       required:true
+                   },
+                   title:{
+                       type:String,
+                       default:''
+                   },
+                   icon:{
+                       type:String
+                   }
+               },
+               render(h){
+                   //子节点数组
+                   let children=[];
+
+                   //icon 属性处理逻辑
+                   if(this.icon){
+                       //<svg class="icon"><use xlink:href="#icon-cart"></use></svg>
+                       children.push(h(
+                           'svg',
+                           {class:'icon'},
+                           [h('use',{attrs:{'xlink:href':'#icon-'+this.icon}})]
+                           ))
+                   }
+                   //拼接子节点
+                   children = children.concat(this.$slots.default)
+                   const vnode =h(
+                       'h'+this.level,//参数1：tagname
+                       {attrs:{title:this.title}},//参数2:{...}
+                       children//参数3：子节点VNode数组
+                   )
+                   console.log(vnode);
+                   //返回createElement返回的Vnode
+                   //h---snabbdom
+                  return vnode
+               }
+           })
 
           //弹窗组件
           Vue.component('message',{
